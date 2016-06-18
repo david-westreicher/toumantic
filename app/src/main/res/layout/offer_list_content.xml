@@ -24,7 +24,7 @@
 
         <me.gujun.android.taggroup.TagGroup
             android:id="@+id/tag_group"
-            style="@style/TagGroup"
+            style="@style/Toumantic.TagGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"

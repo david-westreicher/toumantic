@@ -31,4 +31,10 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <style name="Toumantic.TagGroup" parent="TagGroup.Large">
+        <item name="atg_borderColor">@color/colorPrimary</item>
+        <item name="atg_textColor">@color/colorPrimary</item>
+        <item name="atg_borderStrokeWidth">2dp</item>
+    </style>
+
 </resources>
