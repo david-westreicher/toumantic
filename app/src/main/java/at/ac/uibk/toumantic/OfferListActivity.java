@@ -122,10 +122,10 @@ public class OfferListActivity extends AppCompatActivity implements GoogleApiCli
         int id = item.getItemId();
         if (id == R.id.menu_location) {
             new MaterialDialog.Builder(this)
-                    .title("Only show nearby information")
+                    .title("Filter by location")
                     .icon(ContextCompat.getDrawable(getBaseContext(), R.drawable.ic_my_location_black_24dp))
-                    .positiveText("YES")
-                    .negativeText("NO")
+                    .positiveText("NEARBY")
+                    .negativeText("ALL")
                     .onPositive((dialog, which) -> turnonGPS())
                     .onNegative((dialog, which) -> turnoffGPS())
                     .show();
