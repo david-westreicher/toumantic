@@ -56,7 +56,7 @@ public class OfferDetailFragment extends Fragment {
     public void setOffer(Offer offer) {
         this.offer = offer;
         if (teaserText != null) {
-            teaserText.setText(offer.getTeaser());
+            teaserText.setText(offer.getDescription());
             Log.d("teasertext", "notnull");
         } else {
             Log.d("teasertext", "null");

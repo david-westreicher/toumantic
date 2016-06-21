@@ -1,33 +1,40 @@
 package at.ac.uibk.toumantic;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.util.Pair;
-import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.text.InputType;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
+
+import java.util.Arrays;
 
 import at.ac.uibk.toumantic.adapter.OfferAdapter;
+import at.ac.uibk.toumantic.model.Offer;
 import at.ac.uibk.toumantic.service.ServiceFactory;
 import at.ac.uibk.toumantic.service.TouristicService;
-import me.gujun.android.taggroup.TagGroup;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
@@ -40,8 +47,10 @@ import rx.schedulers.Schedulers;
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class OfferListActivity extends AppCompatActivity {
+public class OfferListActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
+    private static final int LOCATION_PERMSSION = 113;
+    private static final String USE_LOCATION_PREF = "LOC_PREF";
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
@@ -49,6 +58,7 @@ public class OfferListActivity extends AppCompatActivity {
     private boolean mTwoPane;
     private OfferAdapter offerAdapter;
     private SwipeRefreshLayout srl;
+    private GoogleApiClient mGoogleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +88,16 @@ public class OfferListActivity extends AppCompatActivity {
             // activity should be in two-pane mode.
             mTwoPane = true;
         }
+
+        // GOOGLE API
+        // Create an instance of GoogleAPIClient.
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+        }
     }
 
     private void fetchOffers() {
@@ -100,18 +120,58 @@ public class OfferListActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.menu_filter) {
+        if (id == R.id.menu_location) {
             new MaterialDialog.Builder(this)
-                    .positiveText(R.string.agree)
-                    .negativeText(R.string.cancel)
+                    .title("Only show nearby information")
+                    .icon(ContextCompat.getDrawable(getBaseContext(), R.drawable.ic_my_location_black_24dp))
+                    .positiveText("YES")
+                    .negativeText("NO")
+                    .onPositive((dialog, which) -> turnonGPS())
+                    .onNegative((dialog, which) -> turnoffGPS())
+                    .show();
+        }
+        if (id == R.id.menu_filter) {
+            String[] offertypenames = new String[Offer.OfferType.values().length];
+            int i = 0;
+            for (Offer.OfferType t : Offer.OfferType.values())
+                offertypenames[i++] = t.name;
+            Log.d("debug", Arrays.toString(offertypenames));
+            Log.d("debug", Arrays.toString(offerAdapter.notfiltered()));
+            new MaterialDialog.Builder(this)
+                    .title("Filter")
+                    .icon(ContextCompat.getDrawable(getBaseContext(), R.drawable.ic_tune_black_24dp))
+                    .items(offertypenames)
+                    .positiveText("SEARCH")
+                    .negativeText("CANCEL")
+                    .itemsCallbackMultiChoice(offerAdapter.notfiltered(), (dialog, which, text) -> {
+                        Log.d("debug", text + Arrays.toString(which));
+                        offerAdapter.filter(which);
+                        return true;
+                    })
                     .show();
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
+    private void turnoffGPS() {
+        offerAdapter.setLocation(null);
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean(USE_LOCATION_PREF, false);
+        editor.apply();
+    }
+
+    private void turnonGPS() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean(USE_LOCATION_PREF, true);
+        editor.apply();
+        fetchLocation();
+    }
+
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
-        offerAdapter = new OfferAdapter((ImageView iv, TextView tv, TagGroup tg, String id) -> {
+        offerAdapter = new OfferAdapter((ImageView iv, TextView tv, String id) -> {
             if (mTwoPane) {
                 Bundle arguments = new Bundle();
                 arguments.putString(OfferDetailActivity.ARG_ITEM_ID, id);
@@ -125,11 +185,72 @@ public class OfferListActivity extends AppCompatActivity {
                 Intent intent = new Intent(context, OfferDetailActivity.class);
                 intent.putExtra(OfferDetailActivity.ARG_ITEM_ID, id);
                 Pair<View, String> image = Pair.create(iv, OfferDetailActivity.TRANSITION_IMAGE);
-                Pair<View, String> tags = Pair.create(tg, OfferDetailActivity.TRANSITION_TAGS);
-                ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(this, image, tags);
+                ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(this, image);
                 ActivityCompat.startActivity(this, intent, options.toBundle());
             }
         });
         recyclerView.setAdapter(offerAdapter);
     }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        Log.d("debug", "services connected");
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        if (preferences.getBoolean(USE_LOCATION_PREF, false))
+            fetchLocation();
+    }
+
+    private void fetchLocation() {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.d("debug", "checkPermission");
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            } else
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_PERMSSION);
+            return;
+        }
+        Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        if (mLastLocation == null)
+            Log.d("debug", "null location");
+        else
+            offerAdapter.setLocation(mLastLocation);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case LOCATION_PERMSSION: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d("debug", "permission granted");
+                    fetchLocation();
+                } else {
+                    Log.d("debug", "permission denied");
+                }
+                return;
+            }
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Log.d("debug", "services connection suspended");
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Log.d("debug", "services connection failed");
+    }
+
+    protected void onStart() {
+        mGoogleApiClient.connect();
+        super.onStart();
+    }
+
+    protected void onStop() {
+        mGoogleApiClient.disconnect();
+        super.onStop();
+    }
+
 }

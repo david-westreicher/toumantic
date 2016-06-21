@@ -21,6 +21,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    dexOptions{
+        javaMaxHeapSize "8g"
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -41,4 +44,5 @@ dependencies {
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'me.gujun.android.taggroup:library:1.4@aar'
     compile 'com.afollestad.material-dialogs:core:0.8.5.9'
+    compile 'com.google.android.gms:play-services-location:9.0.2'
 }

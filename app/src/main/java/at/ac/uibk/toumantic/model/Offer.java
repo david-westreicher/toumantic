@@ -4,24 +4,46 @@ package at.ac.uibk.toumantic.model;
  * Created by david on 5/23/16.
  */
 public class Offer implements Comparable<Offer> {
-    private static int ID = 0;
-    private final String[] items;
-    private String name;
-    private String teaser;
-    private String id;
-    private String image;
-    private String action;
-    private float price;
 
-    public Offer(String name, String teaser, String image, String[] items, float price) {
-        this.id = Integer.toString(ID++);
-        this.name = name;
-        this.teaser = teaser;
-        this.image = image;
-        this.action = "https://shop.khm.at/de/tickets/detail/?shop%5BshowItem%5D=200000000005001-T009-01&shop%5Bfilter%5D%5BtagsFacet%5D=";
-        this.items = items;
-        this.price = price;
+    public enum OfferType {
+        LodgingBusiness("Hotel"), Event("Event"), Offer("Offer"), Restaurant("Restaurant"), TouristAttraction("Tourist Attraction");
+        public final String name;
+
+        OfferType(String name) {
+            this.name = name;
+        }
     }
+
+    public String[] items = new String[]{};
+    private String id;
+    public OfferType type;
+
+    // THING
+    public String description;
+    public String image;
+    public String name;
+    public String action;
+    public Geo geo = new Geo(47.2692, 11.4041);
+
+    // PLACE / TouristAttraction
+    public String address;
+    public String telephone;
+
+    // LOCAL BUSINESS / LodgingBusiness
+    public String openingHours;
+    public String priceRange;
+
+    // FOOD ESTABLISHMENT / Restaurant
+
+    // EVENT
+    public String doorTime;
+    public String location;
+    public String performer;
+    public String startDate;
+
+    // Offer
+    public float price;
+    public String category;
 
     public void setID(int id) {
         this.id = Integer.toString(id);
@@ -31,8 +53,8 @@ public class Offer implements Comparable<Offer> {
         return name;
     }
 
-    public String getTeaser() {
-        return teaser;
+    public String getDescription() {
+        return description;
     }
 
 
@@ -58,6 +80,10 @@ public class Offer implements Comparable<Offer> {
 
     @Override
     public int compareTo(Offer another) {
+        if (type == OfferType.Offer && another.type != OfferType.Offer)
+            return -1;
+        if (type != OfferType.Offer && another.type == OfferType.Offer)
+            return 1;
         return id.compareTo(another.id);
     }
 
@@ -69,7 +95,8 @@ public class Offer implements Comparable<Offer> {
         Offer offer = (Offer) o;
 
         if (name != null ? !name.equals(offer.name) : offer.name != null) return false;
-        if (teaser != null ? !teaser.equals(offer.teaser) : offer.teaser != null) return false;
+        if (description != null ? !description.equals(offer.description) : offer.description != null)
+            return false;
         if (id != null ? !id.equals(offer.id) : offer.id != null) return false;
         return image != null ? image.equals(offer.image) : offer.image == null;
 
@@ -78,7 +105,7 @@ public class Offer implements Comparable<Offer> {
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (teaser != null ? teaser.hashCode() : 0);
+        result = 31 * result + (description != null ? description.hashCode() : 0);
         result = 31 * result + (id != null ? id.hashCode() : 0);
         result = 31 * result + (image != null ? image.hashCode() : 0);
         return result;
@@ -88,8 +115,18 @@ public class Offer implements Comparable<Offer> {
     public String toString() {
         return "Offer{" +
                 "name='" + name + '\'' +
-                ", teaser='" + teaser + '\'' +
+                ", teaser='" + description + '\'' +
                 ", id='" + id + '\'' +
                 '}';
+    }
+
+    public static class Geo {
+        public double latitude = 40.0;
+        public double longitude = 10.0;
+
+        public Geo(double lat, double lon) {
+            this.latitude = lat;
+            this.longitude = lon;
+        }
     }
 }
