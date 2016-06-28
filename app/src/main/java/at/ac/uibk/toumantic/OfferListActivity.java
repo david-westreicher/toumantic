@@ -68,6 +68,7 @@ public class OfferListActivity extends AppCompatActivity implements GoogleApiCli
     private SwipeRefreshLayout srl;
     private GoogleApiClient mGoogleApiClient;
     private SimpleFacebook mSimpleFacebook;
+    private Menu menu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,6 +123,7 @@ public class OfferListActivity extends AppCompatActivity implements GoogleApiCli
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        this.menu = menu;
         getMenuInflater().inflate(R.menu.menu_offer_list, menu);
         return true;
     }
@@ -161,6 +163,10 @@ public class OfferListActivity extends AppCompatActivity implements GoogleApiCli
             return true;
         }
         if (id == R.id.menu_fb) {
+            if (mSimpleFacebook.isLogin())
+                item.setIcon(ContextCompat.getDrawable(getBaseContext(), R.drawable.fb_black));
+            else
+                item.setIcon(ContextCompat.getDrawable(getBaseContext(), R.drawable.fb_white));
             facebooktoggle();
             return true;
         }
