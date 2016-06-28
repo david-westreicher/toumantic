@@ -9,6 +9,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.content.ContextCompat;
@@ -28,8 +29,15 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.sromku.simple.fb.Permission;
+import com.sromku.simple.fb.SimpleFacebook;
+import com.sromku.simple.fb.entities.Page;
+import com.sromku.simple.fb.listeners.OnLoginListener;
+import com.sromku.simple.fb.listeners.OnPagesListener;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import at.ac.uibk.toumantic.adapter.OfferAdapter;
 import at.ac.uibk.toumantic.model.Offer;
@@ -59,6 +67,7 @@ public class OfferListActivity extends AppCompatActivity implements GoogleApiCli
     private OfferAdapter offerAdapter;
     private SwipeRefreshLayout srl;
     private GoogleApiClient mGoogleApiClient;
+    private SimpleFacebook mSimpleFacebook;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -151,8 +160,13 @@ public class OfferListActivity extends AppCompatActivity implements GoogleApiCli
                     .show();
             return true;
         }
+        if (id == R.id.menu_fb) {
+            facebooktoggle();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
+
 
     private void turnoffGPS() {
         offerAdapter.setLocation(null);
@@ -251,6 +265,60 @@ public class OfferListActivity extends AppCompatActivity implements GoogleApiCli
     protected void onStop() {
         mGoogleApiClient.disconnect();
         super.onStop();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mSimpleFacebook = SimpleFacebook.getInstance(this);
+    }
+
+    private void facebooktoggle() {
+        if (mSimpleFacebook.isLogin()) {
+            mSimpleFacebook.logout(() -> {
+                offerAdapter.clearInterests();
+            });
+        } else
+            mSimpleFacebook.login(new OnLoginListener() {
+                @Override
+                public void onLogin(String accessToken, List<Permission> acceptedPermissions, List<Permission> declinedPermissions) {
+                    Log.d("toumantic", "onlogin");
+                    mSimpleFacebook.getMusic(new OnPagesListener() {
+                        @Override
+                        public void onComplete(List<Page> music) {
+                            Log.d("toumantic getmusic", Integer.toString(music.size()));
+                            List<String> interests = new ArrayList<>();
+                            for (Page p : music)
+                                interests.add(p.getName());
+                            offerAdapter.setInterests(interests, (Offer o) -> {
+                                Snackbar.make(srl, "Found an artist you like: " + o.name, Snackbar.LENGTH_LONG).show();
+                            });
+                        }
+                    });
+                }
+
+                @Override
+                public void onCancel() {
+                    Log.d("toumantic", "oncancel");
+                }
+
+                @Override
+                public void onException(Throwable throwable) {
+                    Log.d("toumantic", "onexception");
+                }
+
+                @Override
+                public void onFail(String reason) {
+                    Log.d("toumantic", "onfail");
+                    Log.d("toumantic", reason);
+                }
+            });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        mSimpleFacebook.onActivityResult(requestCode, resultCode, data);
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
 }

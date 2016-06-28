@@ -31,9 +31,9 @@
                 android:layout_width="80dp"
                 android:layout_height="80dp"
                 android:layout_gravity="top|right"
+                android:padding="8dp"
                 android:scaleType="fitXY"
-                android:src="@drawable/special_offer"
-                android:padding="8dp" />
+                android:src="@drawable/special_offer" />
         </FrameLayout>
 
 
@@ -50,10 +50,19 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:layout_toLeftOf="@+id/icon"
+                android:layout_toLeftOf="@+id/icon2"
                 android:text="Title"
                 android:textAppearance="?attr/textAppearanceListItem"
                 android:textSize="24sp" />
+
+            <ImageView
+                android:id="@+id/icon2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_toLeftOf="@+id/icon"
+                android:src="@drawable/ic_favorite_black_24dp"
+                android:paddingLeft="8dp" />
 
             <ImageView
                 android:id="@+id/icon"
@@ -61,7 +70,8 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:src="@drawable/ic_hotel_black_24dp" />
+                android:src="@drawable/ic_hotel_black_24dp"
+                android:paddingLeft="8dp" />
         </RelativeLayout>
 
         <!--

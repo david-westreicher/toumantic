@@ -35,6 +35,7 @@ public class OfferAdapter
     private Set<Offer.OfferType> filteredTypes = new HashSet<>();
     private Set<Offer> allOffers = new HashSet<>();
     private Location location;
+    private Set<String> interests = new HashSet<>();
 
     public OfferAdapter(OnItemClickListener onClick) {
         onItemClick = onClick;
@@ -42,6 +43,17 @@ public class OfferAdapter
 
             @Override
             public int compare(Offer o1, Offer o2) {
+                String name1 = o1.name.toLowerCase();
+                String name2 = o2.name.toLowerCase();
+                if (interests.contains(name1)) {
+                    if (!interests.contains(name2)) {
+                        return -1;
+                    }
+                } else {
+                    if (interests.contains(name2)) {
+                        return 1;
+                    }
+                }
                 return o1.compareTo(o2);
             }
 
@@ -78,7 +90,9 @@ public class OfferAdapter
             public boolean areItemsTheSame(Offer item1, Offer item2) {
                 return item1.equals(item2);
             }
-        });
+        }
+
+        );
     }
 
     @Override
@@ -92,6 +106,10 @@ public class OfferAdapter
     public void onBindViewHolder(final ViewHolder holder, int position) {
         Offer item = mValues.get(position);
         holder.item = item;
+        if (interests.contains(item.name.toLowerCase()))
+            holder.interestedIcon.setVisibility(View.VISIBLE);
+        else
+            holder.interestedIcon.setVisibility(View.GONE);
         switch (item.type) {
             case Offer:
                 holder.mSpecialOffer.setVisibility(View.VISIBLE);
@@ -182,12 +200,31 @@ public class OfferAdapter
         filtermValues();
     }
 
+    public void setInterests(List<String> ints, FoundInterestCb callback) {
+        for (String s : ints)
+            interests.add(s.toLowerCase());
+        mValues.clear();
+        filtermValues();
+        for (int i = 0; i < mValues.size(); i++) {
+            Offer o = mValues.get(i);
+            if (interests.contains(o.name.toLowerCase()))
+                callback.found(o);
+        }
+    }
+
+    public void clearInterests() {
+        interests.clear();
+        mValues.clear();
+        filtermValues();
+    }
+
     public class ViewHolder extends RecyclerView.ViewHolder {
         public final View mView;
         public final TextView mIdView;
         private final ImageView mImageView;
         private final ImageView mIcon;
         private final ImageView mSpecialOffer;
+        private final ImageView interestedIcon;
         private Offer item;
 
         public ViewHolder(View view) {
@@ -197,11 +234,16 @@ public class OfferAdapter
             mIcon = (ImageView) view.findViewById(R.id.icon);
             mSpecialOffer = (ImageView) view.findViewById(R.id.specialoffer);
             mImageView = (ImageView) view.findViewById(R.id.image);
+            interestedIcon = (ImageView) view.findViewById(R.id.icon2);
         }
 
     }
 
     public interface OnItemClickListener {
         void onClick(ImageView iv, TextView tv, String id);
+    }
+
+    public interface FoundInterestCb {
+        void found(Offer o);
     }
 }

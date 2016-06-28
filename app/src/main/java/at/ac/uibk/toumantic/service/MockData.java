@@ -18,7 +18,7 @@ public class MockData {
         List<Offer> offers = new ArrayList<>();
         for (int i = 0; i < 4; i++)
             offers.add(createLodging(i));
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 5; i++)
             offers.add(createEvent(i));
         for (int i = 0; i < 1; i++)
             offers.add(createOffer(i));
@@ -186,6 +186,14 @@ public class MockData {
                 o.doorTime = "14:00";
                 o.location = "Hafen Innsbruck";
                 o.action = "http://holiopenair.at/gig/holi-innsbruck/";
+                break;
+            case 4:
+                o.name = "Parov Stelar";
+                o.description = "Marcus Füreder ist unter seinem Pseudonym Parov Stelar derzeit Österreichs international erfolgreichster Künstler und Produzent. Er gilt als Erfinder des Genres \"Electro Swing\" und er ist mit seiner Band, der Parov Stelar Band, ein international gefragter Live-Act. Seine Produktionen finden sich als Soundtrack in zahlreichen Spielfilmen, Fernsehshows und Werbespots.";
+                o.image = "http://www.beatmyday.com/wp-content/uploads/2013/04/Parov-Stelar.jpg";
+                o.doorTime = "20:00";
+                o.location = "Olympiastadion Innsbruck";
+                o.action = "http://www.oeticket.com/parov-stelar-live-tickets.html?affiliate=EOE&doc=artistPages/tickets&fun=artist&action=tickets&kuid=502127";
                 break;
             default:
                 o.description = "";
